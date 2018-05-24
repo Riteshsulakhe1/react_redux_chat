@@ -1,0 +1,46 @@
+.table-container {
+    height: 91%;
+    display: flex;
+    justify-content: center;
+    padding-top: 5rem;
+}
+.custom-th {
+    padding: 0;
+    vertical-align: middle;
+    padding-left: 1rem;
+}
+.custom-tr {
+    height: 6rem;
+    background-color: black;
+    color: white;
+}
+.user-table {
+    width: 80%;
+    border: 1px solid;
+    max-height: 91% !important;
+    overflow-y: hidden;
+}
+.custom-thead {
+    width: 100% !important;
+    display: inline-table;
+}
+.custom-tbody {
+    max-height: 92%;
+    overflow-y: auto;
+    display: block;
+}
+.tr-value {
+    width: 100%;
+    display: inline-table;
+}
+.icon-space {
+    padding-right: 1rem;
+}
+.modal-header-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.clear-btn {
+    display: flex;
+}

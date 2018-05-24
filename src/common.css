@@ -1,0 +1,53 @@
+.panel {
+    background: white;
+    box-shadow: 0 1px 3px #B6B6B6;
+    border: 1px solid #E2E2E2;
+    padding: 2rem;
+    border-radius: 5px;
+}
+.h-center{
+    display: flex;
+    justify-content: center;
+}
+.v-center {
+    display: flex;
+    align-items: center;
+}
+.hv-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.full-height {
+    height: 100%;
+}
+.full-width {
+    width: 100%;
+}
+.no-margin{
+    margin: 0 !important;
+}
+.no-padding{
+    padding: 0 !important;
+}
+.fit-to-content-width {
+    width: fit-content;
+}
+.overflow-hide {
+    overflow: hidden;
+
+}
+.heading-2 {
+    font-size: 30px;
+    font-family: inherit;
+    font-weight: 500;
+    line-height: 1.1;
+    color: inherit;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+.hide {
+    display: none;
+}

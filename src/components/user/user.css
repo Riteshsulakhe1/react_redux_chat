@@ -1,0 +1,18 @@
+.input-row{
+    width: 100%;
+    padding-left: 4rem;
+    padding-right: 4rem;
+    display: flex;
+    justify-content: center;
+}
+.editor {
+    width: 25rem;
+    margin-right: 2rem;
+}
+.user-list-container {
+    height: 85%;
+    overflow-y: auto;
+}
+.add-update-btn {
+    margin-right: 2rem;
+}

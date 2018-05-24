@@ -1,0 +1,65 @@
+@import '../../common.css';
+.divider {
+  height: 100vh;
+}
+.App {
+  height: calc(100vh - 2rem);
+}
+.main {
+  height: 10rem;
+  padding: 2rem;
+}
+btns{
+  color: white !important;
+}
+.nav-title {
+  color: white;
+}
+.login-btn {
+  margin-right: 2rem;
+}
+.reg-btn-container{
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+}
+.reg-btn {
+  margin-right: 2rem;
+}
+.sign-up-btn {
+  position: absolute !important;
+  right: 1.8rem;
+}
+.logout-btn {
+  width: fit-content;
+  float: right;
+  margin-right: 1rem;
+}
+.icon-container {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+}
+.add-book-btn {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  float: right;
+  margin-right: 1.5rem;
+}
+.right-col-container{
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.profile-pic {
+  width: 4.2rem;
+  height: 4.2rem;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

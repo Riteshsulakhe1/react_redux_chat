@@ -1,0 +1,24 @@
+.login-form-container {
+    height: 45rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.login_btn_container{
+    margin: 2rem 0rem;
+}
+.login_btn{
+    width: 240px;
+    height: 5rem;
+    font-weight: normal;
+    font-size: 1.5rem !important;
+}
+.text-container{
+    height: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.login-credential label {
+    font-size: 1.5rem;  
+}

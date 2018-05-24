@@ -1,0 +1,14 @@
+.profile-container {
+    height: 94vh;
+    padding-top: 5rem;
+}
+.profile-col {
+    height: fit-content;
+}    
+.btn-container {
+    padding-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}

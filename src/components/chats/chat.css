@@ -1,0 +1,84 @@
+.chat-main-container{
+    height: 94vh;
+    padding-top: 5rem;
+    margin: 0;
+}
+.chat-col {
+    height: 70%;
+}
+.double-border {
+    border: 0.5rem double;
+}
+.user-container {
+    height: 100%;
+    border-right: 2px solid black;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.chat-user-list-container {
+    height: 5rem;
+    background-color: #3f51b5;
+    color: white;
+    font-weight: bold;
+    /* border-right: 2px solid black; */
+}
+ul, .user-list {
+    list-style-type: none;
+    padding: 0;
+}
+.user-list-box {
+    height: 5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #E91E63;
+    margin-bottom: 0.5rem;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.dp {
+    width: 4.2rem;
+    height: 4.2rem;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+.msg-heading-container {
+    height: 5rem;
+    background-color: #3f51b5;
+    color: white;
+    font-weight: bold;
+    height: 8%;
+}
+.msg-container {
+    height: 92%;
+}
+.msg-loading-container {
+    height: 92%;
+}
+.msg-list-container {
+    height: 77%
+}
+.msg-box {
+    width: 80%;
+    float: left;
+}
+.send-btn {
+    width: 20%;
+    float: right;
+}
+.msg-footer {
+    padding: 1rem;
+}
+.msg-detail 
+{
+    border: 1px solid grey; float: right
+}
+.type-msg-container {
+    /* width: 100%;
+    position: absolute;
+    bottom: 0; */
+}
