@@ -2,7 +2,7 @@ import React from 'react';
 import {connect} from 'react-redux';
 import { Link } from 'react-router-dom';
 import {getLoggedInUser} from '../../actions/user.js';
-import {registerGoogleUser, getGoogleUser, setLoggedInUser} from '../../actions/authentication.js';
+import {registerGoogleUser, getGoogleUser, setLoggedInUser, login} from '../../actions/authentication.js';
 import { getConfigs } from '../../actions/config.js';
 import {bindActionCreators} from 'redux';
 import * as fireBaseActions from '../../actions/firebase.js';
@@ -155,7 +155,7 @@ function mapStateToProps (state) {
 }
 function mapDispatchToProps (dispatch) {
 
-    let actions = bindActionCreators({ getLoggedInUser, getConfigs, registerGoogleUser, getGoogleUser, setLoggedInUser, fireBaseActions });
+    let actions = bindActionCreators({ getLoggedInUser, getConfigs, registerGoogleUser, getGoogleUser, setLoggedInUser, fireBaseActions, login });
     return { ...actions, dispatch };
 }
 // export default connect(mapStateToProps, mapDispatchToProps)(Login);

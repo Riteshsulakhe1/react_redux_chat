@@ -1,7 +1,16 @@
 import * as apiUrlConstants from '../constants/apiUrl.constant.js';
 
-export function login(){
-
+export function login(loginData){
+    const url = apiUrlConstants.BASE_URL+'/login';
+    return dispatch =>{
+        return fetch(url, {
+            method: 'POST',
+            headers: new Headers({
+            'Content-Type': 'application/json'
+            }),
+            body: JSON.stringify(loginData)
+        })
+    }
 }
 export function register(userData) {
 
