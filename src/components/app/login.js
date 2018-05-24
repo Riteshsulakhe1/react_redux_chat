@@ -40,15 +40,8 @@ class Login extends React.Component {
     };
 
     gotoLogin () {
-        console.log('data for login', this.state.login);
-        const url = 'http://localhost:4000/login';
-        fetch(url, {
-            method: 'POST',
-            headers: new Headers({
-            'Content-Type': 'application/json'
-            }),
-            body: JSON.stringify(this.state.login)
-        }).then((res)=>{
+        let loginReq = this.props.dispatch(login(this.state.login))
+        loginReq.then((res)=>{
             res.json().then((user)=>{
                 console.log('logged in user', user);
             localStorage.setItem('token', user._id);
