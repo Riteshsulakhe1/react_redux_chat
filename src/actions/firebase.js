@@ -217,24 +217,38 @@ export function checkConversation (loggedInUserId,nextUserId) {
         dispatch(toggleMessageLoading(true));
         dispatch(clearConversation());
         //check for conv created by me
-        let convRefByMyConvId = database.ref('Conversations/'+loggedInUserId+'/'+myConvId);
+        // let convRefByMyConvId = database.ref('Conversations/'+loggedInUserId+'/'+myConvId);
+        // convRefByMyConvId.once("value").then((snapshot) => {
+        //     if (!snapshot.exists()) { 
+        //         //check for conv created by next user
+        //         let convRefByNextConvId = database.ref('Conversation/'+loggedInUserId+'/'+nextUserConvId);
+        //         convRefByNextConvId.once('value').then(conv=>{
+        //             if(!conv.exists()) {
+        //                 createNewConversation(dispatch, loggedInUserId,nextUserId)
+        //             } else {
+        //                 watchConversations(dispatch, nextUserConvId);
+        //                 dispatch(saveCurrentConvRef(conv.val()));
+        //                 getMessagesByConvId(dispatch, conv.val());
+        //             }
+        //         })
+        //     } else {
+        //         watchConversations(dispatch, myConvId);
+        //         dispatch(saveCurrentConvRef(snapshot.val()));
+        //         getMessagesByConvId(dispatch, snapshot.val());
+        //     }
+        // });
+        let convRefByMyConvId = database.ref('Conversations/'+loggedInUserId);
         convRefByMyConvId.once("value").then((snapshot) => {
-            if (!snapshot.exists()) { 
-                //check for conv created by next user
-                let convRefByNextConvId = database.ref('Conversation/'+loggedInUserId+'/'+nextUserConvId);
-                convRefByNextConvId.once('value').then(conv=>{
-                    if(!conv.exists()) {
-                        createNewConversation(dispatch, loggedInUserId,nextUserId)
-                    } else {
-                        watchConversations(dispatch, nextUserConvId);
-                        dispatch(saveCurrentConvRef(conv.val()));
-                        getMessagesByConvId(dispatch, conv.val());
-                    }
-                })
-            } else {
+            if(snapshot.hasChild(myConvId)) {
                 watchConversations(dispatch, myConvId);
                 dispatch(saveCurrentConvRef(snapshot.val()));
+                getMessagesByConvId(dispatch, snapshot.val()); 
+            } else if(snapshot.hasChild(nextUserConvId)) {
+                watchConversations(dispatch, nextUserConvId);
+                dispatch(saveCurrentConvRef(snapshot.val()));
                 getMessagesByConvId(dispatch, snapshot.val());
+            } else {
+                createNewConversation(dispatch, loggedInUserId,nextUserId)
             }
         });
     }
