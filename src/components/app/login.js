@@ -43,11 +43,14 @@ class Login extends React.Component {
         let loginReq = this.props.dispatch(login(this.state.login))
         loginReq.then((res)=>{
             res.json().then((user)=>{
-                console.log('logged in user', user);
-            localStorage.setItem('token', user._id);
-            this.props.dispatch(getLoggedInUser(user._id));
-            this.props.dispatch(getConfigs(user._id));
-            this.props.history.push('/users');
+                if(!user.message){
+                    console.log('logged in user', user);
+                    localStorage.setItem('token', user._id);
+                    this.props.dispatch(getLoggedInUser(user._id));
+                    this.props.dispatch(getConfigs(user._id));
+                    this.props.history.push('/users');
+                    
+                }
             })
         }).catch((err)=>{
             console.log('err', err);
