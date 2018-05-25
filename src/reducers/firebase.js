@@ -49,14 +49,14 @@ export function firebaseReducer(state = initialState, action) {
         }
         case fbConstants.STORE_CONV_MSGS:
         {
-            if(action.payload.newMsgKey) {
-                let convObj = state.currentConversationMessages;
-                convObj[action.payload.newMsgKey] = action.payload.currentConversationMessages;
-                let modifiedObj = {currentConversationMessages: convObj}
-                state = Object.assign({}, state, modifiedObj);
-            } else {
+            // if(action.payload.newMsgKey) {
+            //     let convObj = state.currentConversationMessages;
+            //     convObj[action.payload.newMsgKey] = action.payload.currentConversationMessages;
+            //     let modifiedObj = {currentConversationMessages: convObj}
+            //     state = Object.assign({}, state, modifiedObj);
+            // } else {
                 state = Object.assign({}, state, action.payload);
-            }
+            // }
             break;
         }
         case fbConstants.MSG_LOADING:

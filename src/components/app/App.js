@@ -53,12 +53,13 @@ class App extends React.Component {
 
   logout () {
 
-    localStorage.removeItem('token');
     fireBaseActions.logOut(this.props.loggedInUser).then((user)=>{
+      localStorage.removeItem('token');
+      this.props.dispatch(logout());
+      this.props.history.push('/signIn');
       console.log('logout from google successfully...........', user);
     });
-    this.props.dispatch(logout());
-    this.props.history.push('/signIn');
+    
   }
   handleClose () {
 
@@ -110,9 +111,8 @@ class App extends React.Component {
                 <Link to="/signUp"> <button className="btn btn-primary btns reg-btn">Register</button></Link>
                 <Link to="/signIn"><button className="btn btn-success btns login-btn">Login</button></Link>
                 </span>
-                {/* <div className={this.props.loggedInUser._id? 'visible': 'hidden'}> */}
-                  <img  className={this.props.loggedInUser._id? 'visible profile-pic': 'hidden'} src={this.props.loggedInUser.picture} />
-                {/* </div> */}
+                <img  className={this.props.loggedInUser._id && this.props.loggedInUser.picture? 'visible profile-pic': 'hidden'} src={this.props.loggedInUser.picture} />
+                <img  className={this.props.loggedInUser._id && !this.props.loggedInUser.picture? 'visible profile-pic cursor-pointer': 'hidden'} src="images/account_circle_black_48x48.png" />                
                 <div className={this.props.loggedInUser._id? 'logout-btn full-height v-center': 'hidden'}>
                 <Button variant="raised" color="secondary" className={classes.button} onClick={this.logout.bind(this)}>
                   Logout

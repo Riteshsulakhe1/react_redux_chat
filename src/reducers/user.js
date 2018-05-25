@@ -3,7 +3,8 @@ const initialState = {
     fetchUserError: null,
     userList: [],
     selectedUser:{},
-    loggedInUser: {}
+    loggedInUser: {},
+    loginLoading: false
 }
 export function userListReducer (state = initialState, action){
 
@@ -52,6 +53,11 @@ export function userListReducer (state = initialState, action){
         case "AUTHENTICATE_USER": 
         {
             state = Object.assign({}, state, action.payload);
+            break;
+        }
+        case "TOGGLE_NORMAL_LOADING":
+        {
+            state = Object.assign({}, state, action.payload)
             break;
         }
         default : return state;

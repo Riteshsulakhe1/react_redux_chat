@@ -22,3 +22,16 @@
 .login-credential label {
     font-size: 1.5rem;  
 }
+.loading-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    background: black;
+    opacity: 0.4;
+}
+.login-form {
+    padding: 0rem 2rem;
+}

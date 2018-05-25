@@ -60,7 +60,9 @@ ul, .user-list {
     height: 92%;
 }
 .msg-list-container {
-    height: 77%
+    height: 88%;
+    padding: 1rem;
+    overflow-y: auto;
 }
 .msg-box {
     width: 80%;
@@ -71,11 +73,34 @@ ul, .user-list {
     float: right;
 }
 .msg-footer {
+    height: 12%;
     padding: 1rem;
 }
-.msg-detail 
+.msg-detail-left
 {
-    border: 1px solid grey; float: right
+    border: 1px solid grey; 
+    padding: 0.5rem;
+    background-color:green;
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+    float: left;
+}
+.msg-detail-right
+{
+    border: 1px solid grey; 
+    padding: 0.5rem;
+    background-color: #E91E63;
+    max-width: 70%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem !important;
+    float: right;
+}
+.message-text-container {
+    max-height: 70%;
+    overflow-y: auto;
 }
 .type-msg-container {
     /* width: 100%;

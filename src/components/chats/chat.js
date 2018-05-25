@@ -7,8 +7,10 @@ import * as firebaseActions from '../../actions/firebase.js';
 import {CircularProgress} from 'material-ui/Progress';
 import Button from 'material-ui/Button';
 import TextField from 'material-ui/TextField';
+
 //css 
 import './chat.css';
+
 class Chat extends React.Component {
     constructor() {
         super();
@@ -19,7 +21,6 @@ class Chat extends React.Component {
         }
     }
     componentWillMount() {
-        console.log('props in chat', this.props);
         if(this.props.isFbInitialized) {
             this.props.dispatch(firebaseActions.getUserList());
         }
@@ -54,16 +55,13 @@ class Chat extends React.Component {
             this.props.dispatch(firebaseActions.sendMessage(msgObj));
         }
     };
-    // componentWillReceiveProps(){
-    //     if(this.props.currentConversationRef) {
-    //         console.log('props received....', this.props)
-    //         this.fetchMsgOfCurrentConversation();
-    //     }
-    // }
-    // fetchMsgOfCurrentConversation () {
-    //     console.log('now fetch msg of currentConv', this.props.currentConversationRef);
-    // }
-  
+    componentWillReceiveProps(){
+        if(this.props) {
+            console.log('props received....', this.props)
+            // this.fetchMsgOfCurrentConversation();
+        }
+    }
+
     render() {
         if(this.props.fetchUserLoading) {
             return(
@@ -84,7 +82,7 @@ class Chat extends React.Component {
                                 <ul className="user-list">
                                     {Object.keys(this.props.userList).map((key)=>{
                                       return(
-                                        <li className="user-list-box" key={this.props.userList[key]._id} onClick={this.selectUserForChat.bind(this, this.props.userList[key])}>
+                                        <li className="user-list-box" key={key} onClick={this.selectUserForChat.bind(this, this.props.userList[key])}>
                                             <img className="dp" src={this.props.userList[key].picture} alt=""/>
                                             <span>{this.props.userList[key].name}</span>
                                             <span className="user-status">{this.props.userList[key].status}</span>
@@ -100,16 +98,16 @@ class Chat extends React.Component {
                                         {Object.keys(this.props.currentConversationMessages).map(key=>{
                                             if(this.props.currentConversationMessages[key].message) {
                                                 return(
-                                                    <div className="msg-detail" key={key}>
-                                                        {this.props.currentConversationMessages[key].from}
-                                                        {this.props.currentConversationMessages[key].to}
-                                                        {this.props.currentConversationMessages[key].message}
+                                                    <div className={this.props.loggedInUser._id === this.props.currentConversationMessages[key].from ? 'msg-detail-right row full-width no-margin': 'msg-detail-left full-width no-margin'} key={key}>
+                                                        <div className="full-width pull-left">{this.props.currentConversationMessages[key].from === this.props.loggedInUser._id ? 'You': ''+this.state.selectedReceiver.name}</div>
+                                                        <div className="full-width message-text">{this.props.currentConversationMessages[key].message}</div>
+                                                        <div className="full-width pull-right">{this.props.currentConversationMessages[key].timestamp}</div>
                                                     </div>
                                                 )
                                             }
                                         })}
                                     </div>
-                                    <div className="msg-footer">
+                                    <div className="msg-footer v-center">
                                         <span className="msg-box"><TextField fullWidth id="msg"  label="Enter Your Message" margin="dense" onChange={this.setInputValue.bind(this)} value={this.state.message ? this.state.message: ''}/> <br/></span>
                                         <span className="send-btn"><Button variant="raised" color="primary" className="" onClick={this.sendMessage.bind(this)}>
                                             Send
@@ -131,7 +129,7 @@ class Chat extends React.Component {
 }
 
 function mapStateToProps(state) {
-   
+   console.log('state in chat', state.firebaseStates);
     return {
         loggedInUser: state.userStates.loggedInUser,
         fetchUserLoading: state.firebaseStates.fetchUserLoading,

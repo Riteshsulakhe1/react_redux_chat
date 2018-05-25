@@ -1,7 +1,8 @@
 import * as firebase from 'firebase';
 import * as fbConstants from '../constants/firebase.constant.js';
 import * as apiUrlConstants from '../constants/apiUrl.constant.js';
-
+// import {promise} from 'react';
+// console.log('promis', promise);
 let database
 let config
 let dbRef
@@ -48,7 +49,21 @@ export function updateConfigs (configData) {
     return{ type: 'SET_FIREBASE_CONFIGS', payload: configData};
 }
 
-export function addUserToDb (user){
+export function checkUserExistanceInFb(userDetail) {
+
+    userNodeRef = database.ref('Users');
+    userNodeRef.child(userDetail._id).once('value').then(user=>{
+        if(user.hasChild(userDetail._id)){
+            console.log('user already exist in fb .....',user);
+            updateUserStatusOnline(userDetail);
+        } else {
+            console.log('adding new user to fb', user);
+            addGoogleUserToFb(userDetail);
+        }
+    })
+}
+
+export function addGoogleUserToFb (user){
 
     let userDetail = {
       _id: user._id,
@@ -60,10 +75,34 @@ export function addUserToDb (user){
     }
     userNodeRef = database.ref('Users/'+user._id);
     userNodeRef.set(userDetail).then((savedUser)=>{
-      console.log('user saved in firebase db .........', userDetail);
+      console.log('google user saved in firebase db .........', userDetail);
     },(err)=>{
       console.log('err in save user to firebase', err);
     });
+}
+
+export function addNormalUserToFb(user) {
+ 
+    return new Promise((resolve, reject)=>{
+        let userDetail = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            picture: user.picture,
+            lastSeen: '',
+            status: 'Online'
+        }
+        userNodeRef = database.ref('Users/'+user._id);
+        userNodeRef.set(userDetail)
+        .then((res)=>{
+            userDetail.firebaseId = userDetail._id;
+            resolve(userDetail);
+            // console.log('saved in fb........', res);
+        },(err)=>{
+            console.log('err in save to fb', err);
+            reject(err);
+        })
+    })
 }
 
 export function getUserList (){
@@ -99,12 +138,17 @@ export function logOut(user) {
 }
 
 export function updateUserStatusOnline (user){
+    console.log('user to update status online', user);
     if(user){
       var usersRef = database.ref('Users/'+user._id);
-      usersRef.update({
-        status: 'Online'
-      });
-      getUserList();
+      usersRef.once('value').then(snapshot=>{
+          if(snapshot.exists()) {
+            usersRef.update({
+                status: 'Online'
+            });
+            getUserList();
+          }
+      })
   
     }
 }
@@ -269,9 +313,7 @@ export function sendMessage (msgObj) {
         let msgNodeRef = database.ref('Chats/'+msgObj.conversationId);
         msgNodeRef.push(msgObj).then(msg=>{
             console.log('msg sent successfully', msg);
-            let msgId = msg.path.pieces_[2];
-            console.log('msg id in firebase', msgId);
-            dispatch(saveCurrentConvMsg(msgObj, msgId));
+            getMessagesByConvId(dispatch,msgObj);
         });
     }
 }

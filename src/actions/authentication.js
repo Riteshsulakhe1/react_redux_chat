@@ -29,6 +29,12 @@ export function setLoggedInUser(user) {
 
     return { 'type': 'LOGGED_IN_USER', payload: {loggedInUser: user}};
 }
+export function toggleLoginLoading(status) {
+
+    return dispatchEvent => {
+        dispatchEvent({type: 'TOGGLE_NORMAL_LOADING', payload: {loginLoading: status}});
+    }
+}
 export function registerGoogleUser (user) {
 
     return dispatch => {

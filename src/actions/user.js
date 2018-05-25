@@ -22,7 +22,7 @@ export function fetchUser () {
 export function getLoggedInUser (id) {
     return dispatch =>{
         dispatch(fetchUserStart());
-        const url = apiUrlConstants.BASE_URL+'/getLoggedInUser/?id='+id;
+        const url = apiUrlConstants.BASE_URL+'/loggedInUser/?id='+id;
         fetch(url, {
             method: 'GET',
             headers: new Headers({
@@ -36,6 +36,23 @@ export function getLoggedInUser (id) {
         .catch(error => dispatch(fetchUserError(error)));
     }
 }
+export function updateUserFirebaseID (user) {
+    return dispatch=>{
+        const url = apiUrlConstants.BASE_URL+'/loggedInUser';
+        fetch(url, {
+            method: 'PUT',
+            headers: new Headers({
+            'Content-Type': 'application/json'
+            }),
+            body: JSON.stringify(user)
+        }).then(res=>{
+            res.json().then(user=>{
+                dispatch(saveLoggedInUser(user));
+            })
+        })
+    }
+};
+
 export function selectUser (user) {
 
     return {type: 'SELECT_USER', payload:{selectedUser: user}}
