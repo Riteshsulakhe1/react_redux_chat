@@ -234,13 +234,11 @@ export function checkConversation (dispatch,loggedInUserId,nextUserId) {
             let allConv = snapshot.val();
             if(allConv && allConv.hasOwnProperty(myConvId)) {
                 dispatch(clearConversation());
-                allConv = snapshot.val();
                 let matchedConv = allConv[myConvId];
                 dispatch(saveCurrentConvRef(matchedConv));
                 dispatch(getMessagesByConvId(matchedConv)); 
             } else if(allConv && allConv.hasOwnProperty(nextUserConvId)) {
                 dispatch(clearConversation());
-                allConv = snapshot.val();
                 let matchedConv = allConv[nextUserConvId];
                 dispatch(saveCurrentConvRef(matchedConv));
                 dispatch(getMessagesByConvId(matchedConv));

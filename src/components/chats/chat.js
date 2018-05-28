@@ -24,7 +24,7 @@ class Chat extends React.Component {
         if(this.props.isFbInitialized) {
             this.props.dispatch(firebaseActions.conversationByUserId(this.props.loggedInUser._id));
             this.props.dispatch(firebaseActions.watchConversations(this.props.dbRef,this.props.loggedInUser._id));
-            this.props.dispatch(firebaseActions.getUserList(this.props.allConversationMessages));
+            this.props.dispatch(firebaseActions.getUserList());
         }
     }
 
