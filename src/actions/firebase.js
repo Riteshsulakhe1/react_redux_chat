@@ -56,10 +56,8 @@ export function checkUserExistanceInFb(userDetail) {
     userNodeRef = database.ref('Users');
     userNodeRef.child(userDetail._id).once('value').then(user=>{
         if(user.hasChild(userDetail._id)){
-            console.log('user already exist in fb .....',user);
             updateUserStatusOnline(userDetail);
         } else {
-            console.log('adding new user to fb', user);
             addGoogleUserToFb(userDetail);
         }
     })
@@ -99,7 +97,6 @@ export function addNormalUserToFb(user) {
         .then((res)=>{
             userDetail.firebaseId = userDetail._id;
             resolve(userDetail);
-            // console.log('saved in fb........', res);
         },(err)=>{
             console.log('err in save to fb', err);
             reject(err);
@@ -116,12 +113,11 @@ export function getUserList (){
           let exists = (snapshot.val() !== null);
           if(exists) {
             let userList = snapshot.val();
-            let keys = Object.keys(userList);
-            console.log('first user', userList[keys[0]])
             let loggedInUserId = localStorage.getItem('token');
+            delete userList[loggedInUserId];
+            let keys = Object.keys(userList);
             let nextUserId = userList[keys[0]]._id;
             dispatch(selectReceiver(userList[keys[0]]));
-            delete userList[loggedInUserId];
             dispatch(updateUserList(userList));
             checkConversation(dispatch,loggedInUserId, nextUserId);
             dispatch(toggleFetchUserLoading(false));
@@ -145,7 +141,7 @@ export function logOut(user) {
 }
 
 export function updateUserStatusOnline (user){
-    console.log('user to update status online', user);
+
     if(user){
       var usersRef = database.ref('Users/'+user._id);
       usersRef.once('value').then(snapshot=>{
@@ -161,6 +157,7 @@ export function updateUserStatusOnline (user){
 }
   
 function updateUserStatusOffline (user){
+
     if(user){
         var usersRef = database.ref('Users/'+user._id);
         usersRef.update({
@@ -170,6 +167,7 @@ function updateUserStatusOffline (user){
 }
 
 function updateLastSeen(user) {
+    
     if(user) {
         var date = new Date();
         var timestamp = date.getTime();
@@ -228,22 +226,21 @@ export function conversationByUserId (userId) {
 export function checkConversation (dispatch,loggedInUserId,nextUserId) {
 
     if(dispatch,loggedInUserId, nextUserId) {
-        let myConvId = loggedInUserId+'_'+nextUserId;
-        let nextUserConvId = nextUserId+'_'+loggedInUserId
+        let myConvId = ''+loggedInUserId+'_'+nextUserId;
+        let nextUserConvId = ''+nextUserId+'_'+loggedInUserId
         dispatch(toggleMessageLoading(true));
         let convRefByMyConvId = database.ref('Conversations/'+loggedInUserId);
         convRefByMyConvId.once("value").then((snapshot) => {
-            if(snapshot.val() && snapshot.hasChild(myConvId)) {
-                console.log('my conv matched..', myConvId)
+            let allConv = snapshot.val();
+            if(allConv && allConv.hasOwnProperty(myConvId)) {
                 dispatch(clearConversation());
-                let allConv = snapshot.val();
+                allConv = snapshot.val();
                 let matchedConv = allConv[myConvId];
                 dispatch(saveCurrentConvRef(matchedConv));
                 dispatch(getMessagesByConvId(matchedConv)); 
-            } else if(snapshot.val() && snapshot.hasChild(nextUserConvId)) {
+            } else if(allConv && allConv.hasOwnProperty(nextUserConvId)) {
                 dispatch(clearConversation());
-                console.log(' next user conv matched..', nextUserConvId);
-                let allConv = snapshot.val();
+                allConv = snapshot.val();
                 let matchedConv = allConv[nextUserConvId];
                 dispatch(saveCurrentConvRef(matchedConv));
                 dispatch(getMessagesByConvId(matchedConv));
@@ -257,8 +254,8 @@ export function checkConversation (dispatch,loggedInUserId,nextUserId) {
 export function createNewConversation (loggedInUserId, nextUserId) {
 
     return dispatch=> {
-        let myConvId = loggedInUserId+'_'+nextUserId;
-        let nextUserConvId = nextUserId+'_'+loggedInUserId
+        let myConvId = ''+loggedInUserId+'_'+nextUserId;
+        let nextUserConvId = ''+nextUserId+'_'+loggedInUserId
         let date = new Date();
         let timestamp = date.getTime();
         let convObj = {
@@ -311,7 +308,6 @@ export function getMessagesByConvId(conv) {
         let messageNodeRef = database.ref('Chats/'+conv.conversationId);
         messageNodeRef.once('value').then(messages=>{
             if(messages.exists()){
-                console.log('fetched msgs', messages.val());
                 dispatch(saveCurrentConvMsg(messages.val()));
                 dispatch(toggleMessageLoading(false));
             } else {

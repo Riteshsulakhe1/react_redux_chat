@@ -15,6 +15,7 @@ class Chat extends React.Component {
     constructor() {
         super();
         this.state = {
+            currentConvId: '',
             message: ''
         }
     }
@@ -30,19 +31,22 @@ class Chat extends React.Component {
     selectUserForChat (user) {
 
         if(user && this.props.selectedReceiver._id !== user._id) {
-            let myConvId = this.props.loggedInUser._id+'_'+user._id;
-            let nextUserConvId = user._id+'_'+this.props.loggedInUser._id;
-            this.props.dispatch(firebaseActions.selectReceiver(user));
+            this.setState({currentConvId: ''});
+            let myConvId = ''+this.props.loggedInUser._id+'_'+user._id;
+            let nextUserConvId = ''+user._id+'_'+this.props.loggedInUser._id;
             this.props.dispatch(firebaseActions.clearConversation());
+            this.props.dispatch(firebaseActions.selectReceiver(user));
             if(this.props.myConversations !== {}) {
                 if(this.props.myConversations.hasOwnProperty(myConvId)) {
-                    this.props.dispatch(firebaseActions.saveCurrentConvRef(this.props.myConversations[myConvId]));
-                    this.props.dispatch(firebaseActions.setCurrentConvMsgs(this.props.allConversationMessages[myConvId]));
+                    this.setState({currentConvId: myConvId});
                 } else if(this.props.myConversations.hasOwnProperty(nextUserConvId)) {
-                    this.props.dispatch(firebaseActions.saveCurrentConvRef(this.props.myConversations[nextUserConvId]));
-                    this.props.dispatch(firebaseActions.setCurrentConvMsgs(this.props.allConversationMessages[nextUserConvId]));
+                    this.setState({currentConvId: nextUserConvId});
                 } else {
                     this.props.dispatch(firebaseActions.createNewConversation(this.props.loggedInUser._id, user._id)); 
+                }
+                if(this.state.currentConvId !== ''){
+                    this.props.dispatch(firebaseActions.saveCurrentConvRef(this.props.myConversations[this.state.currentConvId]));
+                    this.props.dispatch(firebaseActions.setCurrentConvMsgs(this.props.allConversationMessages[this.state.currentConvId]));
                 }
             } else {
                 this.props.dispatch(firebaseActions.createNewConversation(this.props.loggedInUser._id, user._id));
@@ -58,6 +62,7 @@ class Chat extends React.Component {
     }
 
     handleKeyPress (e) {
+
         if (e.key === 'Enter') {
             this.sendMessage();
         }
@@ -110,7 +115,7 @@ class Chat extends React.Component {
                                 </ul>
                             </div>
                             <div className="col-sm-8 no-padding full-height">
-                                <div className="msg-heading-container hv-center">Messages.......</div>
+                                <div className="msg-heading-container hv-center">Messages</div>
                                 <div className={this.props.messageLoading ? 'hidden': 'msg-container visible'}>
                                     <div className="msg-list-container" id="msgListContainer">
                                         {Object.keys(this.props.currentConversationMessages).map(key=>{
