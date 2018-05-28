@@ -15,29 +15,53 @@ class Chat extends React.Component {
     constructor() {
         super();
         this.state = {
-            selectedReceiver: {},
-            currentConvId : '',
             message: ''
         }
     }
     componentWillMount() {
+
         if(this.props.isFbInitialized) {
-            this.props.dispatch(firebaseActions.getUserList());
+            this.props.dispatch(firebaseActions.conversationByUserId(this.props.loggedInUser._id));
+            this.props.dispatch(firebaseActions.watchConversations(this.props.dbRef,this.props.loggedInUser._id));
+            this.props.dispatch(firebaseActions.getUserList(this.props.allConversationMessages));
         }
     }
 
     selectUserForChat (user) {
-        if(user && this.state.selectedReceiver._id !== user._id) {
-            this.setState({selectedReceiver: user});
-            this.props.dispatch(firebaseActions.checkConversation(this.props.loggedInUser._id, user._id));
+
+        if(user && this.props.selectedReceiver._id !== user._id) {
+            let myConvId = this.props.loggedInUser._id+'_'+user._id;
+            let nextUserConvId = user._id+'_'+this.props.loggedInUser._id;
+            this.props.dispatch(firebaseActions.selectReceiver(user));
+            this.props.dispatch(firebaseActions.clearConversation());
+            if(this.props.myConversations !== {}) {
+                if(this.props.myConversations.hasOwnProperty(myConvId)) {
+                    this.props.dispatch(firebaseActions.saveCurrentConvRef(this.props.myConversations[myConvId]));
+                    this.props.dispatch(firebaseActions.setCurrentConvMsgs(this.props.allConversationMessages[myConvId]));
+                } else if(this.props.myConversations.hasOwnProperty(nextUserConvId)) {
+                    this.props.dispatch(firebaseActions.saveCurrentConvRef(this.props.myConversations[nextUserConvId]));
+                    this.props.dispatch(firebaseActions.setCurrentConvMsgs(this.props.allConversationMessages[nextUserConvId]));
+                } else {
+                    this.props.dispatch(firebaseActions.createNewConversation(this.props.loggedInUser._id, user._id)); 
+                }
+            } else {
+                this.props.dispatch(firebaseActions.createNewConversation(this.props.loggedInUser._id, user._id));
+            }
         }
     };
+
     setInputValue(event) {
      
         if(event.target) {
           this.setState({message: event.target.value});
         }
     }
+
+    handleKeyPress (e) {
+        if (e.key === 'Enter') {
+            this.sendMessage();
+        }
+    };
 
     sendMessage () {
 
@@ -46,21 +70,15 @@ class Chat extends React.Component {
             let timestampVal = date.getTime();
             let msgObj = {
                 conversationId: this.props.currentConversationRef.conversationId,
-                from: this.props.currentConversationRef.from,
+                from: this.props.loggedInUser._id,
                 message: this.state.message,
                 timestamp: timestampVal,
-                to: this.props.currentConversationRef.to
+                to: this.props.selectedReceiver._id
             }
-            console.log('msg obj', msgObj);
             this.props.dispatch(firebaseActions.sendMessage(msgObj));
+            this.setState({message: ''});
         }
     };
-    componentWillReceiveProps(){
-        if(this.props) {
-            console.log('props received....', this.props)
-            // this.fetchMsgOfCurrentConversation();
-        }
-    }
 
     render() {
         if(this.props.fetchUserLoading) {
@@ -94,21 +112,33 @@ class Chat extends React.Component {
                             <div className="col-sm-8 no-padding full-height">
                                 <div className="msg-heading-container hv-center">Messages.......</div>
                                 <div className={this.props.messageLoading ? 'hidden': 'msg-container visible'}>
-                                    <div className="msg-list-container">
+                                    <div className="msg-list-container" id="msgListContainer">
                                         {Object.keys(this.props.currentConversationMessages).map(key=>{
                                             if(this.props.currentConversationMessages[key].message) {
                                                 return(
-                                                    <div className={this.props.loggedInUser._id === this.props.currentConversationMessages[key].from ? 'msg-detail-right row full-width no-margin': 'msg-detail-left full-width no-margin'} key={key}>
-                                                        <div className="full-width pull-left">{this.props.currentConversationMessages[key].from === this.props.loggedInUser._id ? 'You': ''+this.state.selectedReceiver.name}</div>
+                                                    <div className={this.props.loggedInUser._id === this.props.currentConversationMessages[key].from ? 'msg-detail msg-bg-right row no-margin': 'msg-detail msg-bg-left no-margin'} key={key}>
+                                                        <div className="full-width pull-left">{this.props.currentConversationMessages[key].from === this.props.loggedInUser._id ? 'You': ''+this.props.selectedReceiver.name}</div>
                                                         <div className="full-width message-text">{this.props.currentConversationMessages[key].message}</div>
                                                         <div className="full-width pull-right">{this.props.currentConversationMessages[key].timestamp}</div>
                                                     </div>
                                                 )
                                             }
                                         })}
+                                        {/* {Object.keys(this.props.allConversationMessages[this.props.currentConversationRef.conversationId]).map(key=>{
+                                            console.log('loop', key);
+                                            if(this.props.currentConversationRef.conversationId === key){
+                                                return(
+                                                    <div className={this.props.loggedInUser._id === this.props.allConversationMessages[key].from ? 'msg-detail-right row full-width no-margin': 'msg-detail-left full-width no-margin'} key={key}>
+                                                        <div className="full-width pull-left">{this.props.currentConversationMessages[key].from === this.props.loggedInUser._id ? 'You': ''+this.state.selectedReceiver.name}</div>
+                                                        <div className="full-width message-text">{this.props.currentConversationMessages[key].message}</div>
+                                                        <div className="full-width pull-right">{this.props.currentConversationMessages[key].timestamp}</div>
+                                                    </div>
+                                                )
+                                            }
+                                        })} */}
                                     </div>
                                     <div className="msg-footer v-center">
-                                        <span className="msg-box"><TextField fullWidth id="msg"  label="Enter Your Message" margin="dense" onChange={this.setInputValue.bind(this)} value={this.state.message ? this.state.message: ''}/> <br/></span>
+                                        <span className="msg-box"><TextField fullWidth id="msg"  label="Enter Your Message" margin="dense" onKeyDown={this.handleKeyPress.bind(this)} onChange={this.setInputValue.bind(this)} value={this.state.message ? this.state.message: ''}/> <br/></span>
                                         <span className="send-btn"><Button variant="raised" color="primary" className="" onClick={this.sendMessage.bind(this)}>
                                             Send
                                         </Button></span>
@@ -129,15 +159,19 @@ class Chat extends React.Component {
 }
 
 function mapStateToProps(state) {
-   console.log('state in chat', state.firebaseStates);
+
     return {
         loggedInUser: state.userStates.loggedInUser,
         fetchUserLoading: state.firebaseStates.fetchUserLoading,
         userList: state.firebaseStates.userList,
         isFbInitialized: state.firebaseStates.isFbInitialized,
         currentConversationRef: state.firebaseStates.currentConversationRef,
+        myConversations: state.firebaseStates.myConversations,
         messageLoading: state.firebaseStates.messageLoading,
-        currentConversationMessages: state.firebaseStates.currentConversationMessages
+        currentConversationMessages: state.firebaseStates.currentConversationMessages,
+        dbRef: state.firebaseStates.dbRef,
+        allConversationMessages: state.firebaseStates.allConversationMessages,
+        selectedReceiver: state.firebaseStates.selectedReceiver
     }
 }
 

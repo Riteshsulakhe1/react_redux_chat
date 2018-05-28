@@ -63,6 +63,8 @@ ul, .user-list {
     height: 88%;
     padding: 1rem;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 .msg-box {
     width: 80%;
@@ -76,27 +78,27 @@ ul, .user-list {
     height: 12%;
     padding: 1rem;
 }
-.msg-detail-left
+
+.msg-detail
 {
-    border: 1px solid grey; 
-    padding: 0.5rem;
-    background-color:green;
-    max-width: 70%;
     display: flex;
     flex-direction: column;
-    margin-bottom: 0.5rem;
-    float: left;
-}
-.msg-detail-right
-{
+    max-height: 35rem;
+    overflow-y: auto;
+    min-height: fit-content;
     border: 1px solid grey; 
     padding: 0.5rem;
-    background-color: #E91E63;
     max-width: 70%;
-    display: flex;
-    flex-direction: column;
     margin-bottom: 0.5rem !important;
-    float: right;
+}
+.msg-bg-left {
+    align-self: flex-start;
+    background-color:green;
+}
+.msg-bg-right{
+    align-self: flex-end;
+    background-color: #E91E63;
+
 }
 .message-text-container {
     max-height: 70%;

@@ -7,10 +7,12 @@ const initialState = {
     fetchUserLoading: false,
     fetchUserError: null,
     userList: {},
-    myConversations: [],
+    myConversations: {},
     currentConversationRef: null,
     currentConversationMessages : {},
-    messageLoading: false
+    allConversationMessages: {},
+    messageLoading: false,
+    selectedReceiver: {}
 }
 
 export function firebaseReducer(state = initialState, action) {
@@ -37,6 +39,11 @@ export function firebaseReducer(state = initialState, action) {
             state = Object.assign({}, state, action.payload);
             break;
         }
+        case fbConstants.SELECT_RECEIVER:
+        {
+            state = Object.assign({}, state, action.payload);
+            break;
+        }
         case fbConstants.STORE_CONV_REF:
         {
             state = Object.assign({}, state, action.payload);
@@ -47,18 +54,53 @@ export function firebaseReducer(state = initialState, action) {
             state = Object.assign({}, state, action.payload);
             break;
         }
+        case fbConstants.CLEAR_CONV:
+        {
+            state = Object.assign({}, state, action.payload);
+            break;
+        }
+        case fbConstants.SAVE_MY_CONVERSATION_LIST:
+        {
+            
+            state = Object.assign({}, state, action.payload);
+            break;
+        }
         case fbConstants.STORE_CONV_MSGS:
         {
-            // if(action.payload.newMsgKey) {
-            //     let convObj = state.currentConversationMessages;
-            //     convObj[action.payload.newMsgKey] = action.payload.currentConversationMessages;
-            //     let modifiedObj = {currentConversationMessages: convObj}
-            //     state = Object.assign({}, state, modifiedObj);
-            // } else {
+            if(action.payload.newMsgKey) {
+                let convObj = state.currentConversationMessages;
+                convObj[action.payload.newMsgKey] = action.payload.currentConversationMessages;
+                let modifiedObj = {currentConversationMessages: convObj}
+                state = Object.assign({}, state, modifiedObj);
+            } else {
                 state = Object.assign({}, state, action.payload);
+            }
+            break;
+        }
+        case fbConstants.STORE_ALL_CONV_MSGS:
+        {
+            if(action.payload.childKey) {
+                let convObj = state.allConversationMessages;
+                convObj[action.payload.childKey] = action.payload.data;
+                let modifiedObj = {allConversationMessages: convObj}
+                state = Object.assign({}, state, modifiedObj);
+            } 
+            // else {
+            //     state = Object.assign({}, state, action.payload);
             // }
             break;
         }
+        // case fbConstants.SET_FIRST_COV_REF:
+        // {
+        //     let convRef;
+        //     if(state.myConversations[action.payload.myConvId]) {
+        //         convRef = state.myConversations[action.payload.myConvId]
+        //     } else {
+        //         convRef = state.myConversations[action.payload.myConvId]
+        //     }
+        //     state = Object.assign({}, state, action.payload);
+        //     break;
+        // }
         case fbConstants.MSG_LOADING:
         {
             

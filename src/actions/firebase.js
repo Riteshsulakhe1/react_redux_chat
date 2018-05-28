@@ -1,6 +1,8 @@
 import * as firebase from 'firebase';
 import * as fbConstants from '../constants/firebase.constant.js';
 import * as apiUrlConstants from '../constants/apiUrl.constant.js';
+import {scrollToBottom} from '../services/scrollToBottom.js';
+
 // import {promise} from 'react';
 // console.log('promis', promise);
 let database
@@ -114,9 +116,14 @@ export function getUserList (){
           let exists = (snapshot.val() !== null);
           if(exists) {
             let userList = snapshot.val();
+            let keys = Object.keys(userList);
+            console.log('first user', userList[keys[0]])
             let loggedInUserId = localStorage.getItem('token');
+            let nextUserId = userList[keys[0]]._id;
+            dispatch(selectReceiver(userList[keys[0]]));
             delete userList[loggedInUserId];
             dispatch(updateUserList(userList));
+            checkConversation(dispatch,loggedInUserId, nextUserId);
             dispatch(toggleFetchUserLoading(false));
           }
         });
@@ -172,7 +179,14 @@ function updateLastSeen(user) {
         })
     }
 }
+export function selectReceiver(user) {
 
+    if(user && user._id) {
+        return dispatch=>{
+            dispatch({type: fbConstants.SELECT_RECEIVER, payload: {selectedReceiver: user}});
+        }
+    }
+}
 function setFirebaseReference(ref) {
 
     return{type: fbConstants.SET_FIREBASE_REFRENCE, payload: {firebaseRef: ref, isFbInitialized: true}};
@@ -199,93 +213,81 @@ export function conversationByUserId (userId) {
     return dispatchEvent=>{
         conversationNodeRef = database.ref('Conversations/'+userId);
         conversationNodeRef.once('value').then(convList=>{
-            if (convList.exists()) { 
+            console.log('myConversations', convList.val())
+            if (convList.val() && convList.exists()) { 
                 dispatchEvent(saveConversationList(convList.val()));
+                dispatchEvent(getAllMessages(Object.keys(convList.val())));
             } else {
-                dispatchEvent(saveConversationList([]));
+                dispatchEvent(saveConversationList({}));
             }
             
         });
     }
 }
 
-export function checkConversation (loggedInUserId,nextUserId) {
+export function checkConversation (dispatch,loggedInUserId,nextUserId) {
 
-    let myConvId = loggedInUserId+'_'+nextUserId;
-    let nextUserConvId = nextUserId+'_'+loggedInUserId
-    return dispatch=>{
+    if(dispatch,loggedInUserId, nextUserId) {
+        let myConvId = loggedInUserId+'_'+nextUserId;
+        let nextUserConvId = nextUserId+'_'+loggedInUserId
         dispatch(toggleMessageLoading(true));
-        dispatch(clearConversation());
-        //check for conv created by me
-        // let convRefByMyConvId = database.ref('Conversations/'+loggedInUserId+'/'+myConvId);
-        // convRefByMyConvId.once("value").then((snapshot) => {
-        //     if (!snapshot.exists()) { 
-        //         //check for conv created by next user
-        //         let convRefByNextConvId = database.ref('Conversation/'+loggedInUserId+'/'+nextUserConvId);
-        //         convRefByNextConvId.once('value').then(conv=>{
-        //             if(!conv.exists()) {
-        //                 createNewConversation(dispatch, loggedInUserId,nextUserId)
-        //             } else {
-        //                 watchConversations(dispatch, nextUserConvId);
-        //                 dispatch(saveCurrentConvRef(conv.val()));
-        //                 getMessagesByConvId(dispatch, conv.val());
-        //             }
-        //         })
-        //     } else {
-        //         watchConversations(dispatch, myConvId);
-        //         dispatch(saveCurrentConvRef(snapshot.val()));
-        //         getMessagesByConvId(dispatch, snapshot.val());
-        //     }
-        // });
         let convRefByMyConvId = database.ref('Conversations/'+loggedInUserId);
         convRefByMyConvId.once("value").then((snapshot) => {
-            if(snapshot.hasChild(myConvId)) {
-                watchConversations(dispatch, myConvId);
-                dispatch(saveCurrentConvRef(snapshot.val()));
-                getMessagesByConvId(dispatch, snapshot.val()); 
-            } else if(snapshot.hasChild(nextUserConvId)) {
-                watchConversations(dispatch, nextUserConvId);
-                dispatch(saveCurrentConvRef(snapshot.val()));
-                getMessagesByConvId(dispatch, snapshot.val());
+            if(snapshot.val() && snapshot.hasChild(myConvId)) {
+                console.log('my conv matched..', myConvId)
+                dispatch(clearConversation());
+                let allConv = snapshot.val();
+                let matchedConv = allConv[myConvId];
+                dispatch(saveCurrentConvRef(matchedConv));
+                dispatch(getMessagesByConvId(matchedConv)); 
+            } else if(snapshot.val() && snapshot.hasChild(nextUserConvId)) {
+                dispatch(clearConversation());
+                console.log(' next user conv matched..', nextUserConvId);
+                let allConv = snapshot.val();
+                let matchedConv = allConv[nextUserConvId];
+                dispatch(saveCurrentConvRef(matchedConv));
+                dispatch(getMessagesByConvId(matchedConv));
             } else {
-                createNewConversation(dispatch, loggedInUserId,nextUserId)
+                dispatch(createNewConversation(loggedInUserId,nextUserId));
             }
         });
     }
 };
 
-function createNewConversation (dispatch ,loggedInUserId, nextUserId) {
+export function createNewConversation (loggedInUserId, nextUserId) {
 
-    let myConvId = loggedInUserId+'_'+nextUserId;
-    let nextUserConvId = nextUserId+'_'+loggedInUserId
-    let date = new Date();
-    let timestamp = date.getTime();
-    let convObj = {
-        conversationId: myConvId,
-        from: loggedInUserId,
-        to: nextUserId,
-        lastMessage: '',
-        timestamp: timestamp
-    }
-    let conversationNodeRef = database.ref('Conversations/'+loggedInUserId+'/'+myConvId);
-    conversationNodeRef.set(convObj).then((convCreated)=>{
-        console.log('conv created in fb .........', convCreated);
-        let nextUserConvRef = database.ref('Conversations/'+nextUserId+'/'+myConvId);
-        nextUserConvRef.once('value').then(conv=>{
-            if(!conv.exists()) {
-                let date = new Date();
-                let timestamp1 = date.getTime();
-                convObj.timestamp = timestamp1;
-                nextUserConvRef.set(convObj).then(nextUserConv=>{
-                    dispatch(saveCurrentConvRef(convObj));
-                    getMessagesByConvId(dispatch,convObj);
-                    watchConversations(dispatch, myConvId);
-                });
-            }
-        })
-    },(err)=>{
-        console.log('err in save user to firebase', err);
-    });   
+    return dispatch=> {
+        let myConvId = loggedInUserId+'_'+nextUserId;
+        let nextUserConvId = nextUserId+'_'+loggedInUserId
+        let date = new Date();
+        let timestamp = date.getTime();
+        let convObj = {
+            conversationId: myConvId,
+            from: loggedInUserId,
+            to: nextUserId,
+            lastMessage: '',
+            timestamp: timestamp
+        }
+        let conversationNodeRef = database.ref('Conversations/'+loggedInUserId+'/'+myConvId);
+        conversationNodeRef.set(convObj).then((convCreated)=>{
+            console.log('conv created in fb .........', convCreated);
+            let nextUserConvRef = database.ref('Conversations/'+nextUserId+'/'+myConvId);
+            nextUserConvRef.once('value').then(conv=>{
+                if(!conv.exists()) {
+                    let date = new Date();
+                    let timestamp1 = date.getTime();
+                    convObj.timestamp = timestamp1;
+                    nextUserConvRef.set(convObj).then(nextUserConv=>{
+                        dispatch(saveCurrentConvRef(convObj));
+                        dispatch(getMessagesByConvId(convObj));
+                        watchConversations(myConvId);
+                    });
+                }
+            })
+        },(err)=>{
+            console.log('err in save user to firebase', err);
+        }); 
+    }  
 }
 
 export function createMessageNodeByConvId (dispatch,conv) {
@@ -300,25 +302,60 @@ export function createMessageNodeByConvId (dispatch,conv) {
     msgNodeRef.push(msgObj).then(messages=>{
         console.log('first msg created');
         dispatch(toggleMessageLoading(false));
-        watchChats(dispatch, conv.conversationId);
     });
 }
 
-export function getMessagesByConvId(dispatch,conv) {
+export function getMessagesByConvId(conv) {
 
-    console.log('get messages', dispatch, conv);
-    let messageNodeRef = database.ref('Chats/'+conv.conversationId);
-    messageNodeRef.once('value').then(messages=>{
-        if(messages.exists()){
-            console.log('fetched msgs', messages.val());
-            dispatch(saveCurrentConvMsg(messages.val()));
-            watchChats(dispatch, conv.conversationId);
-            dispatch(toggleMessageLoading(false));
-        } else {
-            createMessageNodeByConvId(dispatch,conv);
-            dispatch(toggleMessageLoading(false));
-        }
-    })
+    return dispatch => {
+        let messageNodeRef = database.ref('Chats/'+conv.conversationId);
+        messageNodeRef.once('value').then(messages=>{
+            if(messages.exists()){
+                console.log('fetched msgs', messages.val());
+                dispatch(saveCurrentConvMsg(messages.val()));
+                dispatch(toggleMessageLoading(false));
+            } else {
+                createMessageNodeByConvId(dispatch,conv);
+                dispatch(toggleMessageLoading(false));
+            }
+        });
+    }
+}
+
+export function setCurrentConvMsgs(messages) {
+
+    return dispatch=>{
+        console.log('in store conv msgs')
+        scrollToBottomOfDiv();
+        dispatch({type: fbConstants.STORE_CONV_MSGS, payload: {currentConversationMessages: messages}});
+    }
+}
+
+export function getAllMessages (convresationIdArray) {
+
+    return dispatch=>{
+        let chatRef = database.ref('Chats');
+        chatRef.once('value').then((chats)=>{
+            chats.forEach(function(childSnapshot) {
+               if(convresationIdArray.indexOf(childSnapshot.key) !== -1) {
+                var childKey = childSnapshot.key;
+                var childData = childSnapshot.val();                    
+                dispatch(storeAllMessages(childData, childKey));
+                if(convresationIdArray.indexOf(childKey) === convresationIdArray.length - 1) {
+                    dispatch(toggleMessageLoading(false));
+                }
+               }
+            });
+            console.log('all chats', chats);
+        });
+    }
+}
+
+export function storeAllMessages(data, childKey) {
+    
+    return dispatch => {
+        dispatch({type: fbConstants.STORE_ALL_CONV_MSGS, payload: {data:data, childKey: childKey}});
+    }
 }
 
 export function sendMessage (msgObj) {
@@ -327,32 +364,48 @@ export function sendMessage (msgObj) {
         let msgNodeRef = database.ref('Chats/'+msgObj.conversationId);
         msgNodeRef.push(msgObj).then(msg=>{
             console.log('msg sent successfully', msg);
-            getMessagesByConvId(dispatch,msgObj);
+            upadateCurrentConv(msgObj);
         });
     }
 }
 
-function watchConversations(dispatch, userId) {
-    let convRef = database.ref('Conversations/'+userId);
-    convRef.on('child_changed', function(data) {
-        console.log('conversation child changed ...', data.val());
+export function upadateCurrentConv(msgObj) {
+
+    let senderConvRef = database.ref('Conversations/'+msgObj.from+'/'+msgObj.conversationId);
+    let receiverConvRef = database.ref('Conversations/'+msgObj.to+'/'+msgObj.conversationId);
+    senderConvRef.update({
+        from: msgObj.from,
+        to: msgObj.to,
+        timestamp: msgObj.timestamp,
+        lastMessage: msgObj.message
+    });
+    receiverConvRef.update({
+        from: msgObj.from,
+        to: msgObj.to,
+        timestamp: msgObj.timestamp,
+        lastMessage: msgObj.message
     });
 }
 
-function watchUsers(dispatch) {
-    let userRef = database.ref('Users');
-    userRef.on('child_changed', function(data) {
-        console.log('users child changed ...', data.val());
-    });
+export function watchConversations(dbRef, userId) {
+
+    return dispatch=>{
+        let convRef = dbRef.ref('Conversations/'+userId);
+        convRef.on('child_changed', function(data) {
+            console.log('conversation child changed ...', data.val());
+            dispatch(getMessagesByConvId(data.val()));
+        });
+    }
 }
 
-function watchChats(dispatch, conversationId) {
-    console.log('watching chats,.........')
+export function watchUsers(dispatch) {
 
-    let chatRef = database.ref('Chats/'+conversationId);
-    chatRef.on('child_changed', function(data) {
-        console.log('chats child changed ...', data.val());
-    });
+    return dispatch=>{
+        let userRef = database.ref('Users');
+        userRef.on('child_changed', function(data) {
+            console.log('users child changed ...', data.val());
+        });
+    }
 }
 
 function saveConversationList(convList) {
@@ -365,21 +418,32 @@ function toggleMessageLoading(status) {
     return{type: fbConstants.MSG_LOADING, payload:{messageLoading: status}};
 }
 
-function clearConversation () {
+export function clearConversation () {
 
-    return{type: fbConstants.CLEAR_CONV, payload:{currentConversationMessages: []}};
+    return{type: fbConstants.CLEAR_CONV, payload:{currentConversationRef: {},currentConversationMessages: {}}};
 }
 
-function saveCurrentConvRef (conv) {
+export function saveCurrentConvRef (conv) {
 
     return{type: fbConstants.STORE_CONV_REF, payload:{currentConversationRef: conv}};
 }
 
 function saveCurrentConvMsg(msgList, msgId) {
+    
+    scrollToBottomOfDiv();
     if(msgId) {
         return {type: fbConstants.STORE_CONV_MSGS, payload:{currentConversationMessages: msgList, newMsgKey: msgId}}
     } else {
-        return {type: fbConstants.STORE_CONV_MSGS, payload:{currentConversationMessages: msgList}}
+        return {type: fbConstants.STORE_CONV_MSGS, payload:{currentConversationMessages: msgList}};
     }
+
+}
+
+export function scrollToBottomOfDiv() {
+
+    setTimeout(()=>{
+        let msgDivElem = document.getElementById('msgListContainer');
+        scrollToBottom(msgDivElem,400);
+    },100);
 }
 
