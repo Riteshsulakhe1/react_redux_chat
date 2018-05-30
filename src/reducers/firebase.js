@@ -67,14 +67,7 @@ export function firebaseReducer(state = initialState, action) {
         }
         case fbConstants.STORE_CONV_MSGS:
         {
-            if(action.payload.newMsgKey) {
-                let convObj = state.currentConversationMessages;
-                convObj[action.payload.newMsgKey] = action.payload.currentConversationMessages;
-                let modifiedObj = {currentConversationMessages: convObj}
-                state = Object.assign({}, state, modifiedObj);
-            } else {
-                state = Object.assign({}, state, action.payload);
-            }
+            state = Object.assign({}, state, action.payload);
             break;
         }
         case fbConstants.STORE_ALL_CONV_MSGS:
@@ -85,20 +78,16 @@ export function firebaseReducer(state = initialState, action) {
                 let modifiedObj = {allConversationMessages: convObj}
                 state = Object.assign({}, state, modifiedObj);
             } 
-            // else {
-            //     state = Object.assign({}, state, action.payload);
-            // }
             break;
         }
-        // case fbConstants.SET_FIRST_COV_REF:
+        // case fbConstants.STORE_UPDATED_MSG:
         // {
-        //     let convRef;
-        //     if(state.myConversations[action.payload.myConvId]) {
-        //         convRef = state.myConversations[action.payload.myConvId]
-        //     } else {
-        //         convRef = state.myConversations[action.payload.myConvId]
+        //     if(action.payload.newMsgKey) {
+        //         let convObj = state.currentConversationMessages;
+        //         convObj[action.payload.newMsgKey] = action.payload.message;
+        //         let modifiedObj = {currentConversationMessages: convObj}
+        //         state = Object.assign({}, state, modifiedObj);
         //     }
-        //     state = Object.assign({}, state, action.payload);
         //     break;
         // }
         case fbConstants.MSG_LOADING:

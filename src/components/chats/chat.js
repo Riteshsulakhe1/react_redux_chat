@@ -1,7 +1,9 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import * as firebaseActions from '../../actions/firebase.js';
+import { withRouter } from 'react-router-dom';
 
 //Material dependencies
 import {CircularProgress} from 'material-ui/Progress';
@@ -20,37 +22,38 @@ class Chat extends React.Component {
         }
     }
     componentWillMount() {
-
+        console.log('proptypes', PropTypes);
         if(this.props.isFbInitialized) {
+            this.props.dispatch(firebaseActions.getUserList());
             this.props.dispatch(firebaseActions.conversationByUserId(this.props.loggedInUser._id));
             this.props.dispatch(firebaseActions.watchConversations(this.props.dbRef,this.props.loggedInUser._id));
-            this.props.dispatch(firebaseActions.getUserList());
         }
     }
-
+    
     selectUserForChat (user) {
 
         if(user && this.props.selectedReceiver._id !== user._id) {
-            this.setState({currentConvId: ''});
-            let myConvId = ''+this.props.loggedInUser._id+'_'+user._id;
-            let nextUserConvId = ''+user._id+'_'+this.props.loggedInUser._id;
-            this.props.dispatch(firebaseActions.clearConversation());
+            this.props.dispatch(firebaseActions.toggleMessageLoading(true));
             this.props.dispatch(firebaseActions.selectReceiver(user));
-            if(this.props.myConversations !== {}) {
+            this.props.dispatch(firebaseActions.clearConversation());
+            let myConvId = this.props.loggedInUser._id+'_'+user._id;
+            let nextUserConvId = user._id+'_'+this.props.loggedInUser._id;
+            if(this.props.myConversations !== {} ) {
                 if(this.props.myConversations.hasOwnProperty(myConvId)) {
-                    this.setState({currentConvId: myConvId});
+                    console.log('my conv id matched', myConvId);
+                    this.props.dispatch(firebaseActions.saveCurrentConvRef(this.props.myConversations[myConvId]));
+                    this.props.dispatch(firebaseActions.saveCurrentConvMsg(this.props.allConversationMessages[myConvId]));
                 } else if(this.props.myConversations.hasOwnProperty(nextUserConvId)) {
-                    this.setState({currentConvId: nextUserConvId});
+                    console.log('next user conv id matched',nextUserConvId);
+                    this.props.dispatch(firebaseActions.saveCurrentConvRef(this.props.myConversations[nextUserConvId]));
+                    this.props.dispatch(firebaseActions.saveCurrentConvMsg(this.props.allConversationMessages[nextUserConvId]));
                 } else {
                     this.props.dispatch(firebaseActions.createNewConversation(this.props.loggedInUser._id, user._id)); 
-                }
-                if(this.state.currentConvId !== ''){
-                    this.props.dispatch(firebaseActions.saveCurrentConvRef(this.props.myConversations[this.state.currentConvId]));
-                    this.props.dispatch(firebaseActions.setCurrentConvMsgs(this.props.allConversationMessages[this.state.currentConvId]));
                 }
             } else {
                 this.props.dispatch(firebaseActions.createNewConversation(this.props.loggedInUser._id, user._id));
             }
+            this.props.dispatch(firebaseActions.toggleMessageLoading(false));
         }
     };
 
@@ -105,7 +108,7 @@ class Chat extends React.Component {
                                 <ul className="user-list">
                                     {Object.keys(this.props.userList).map((key)=>{
                                       return(
-                                        <li className="user-list-box" key={key} onClick={this.selectUserForChat.bind(this, this.props.userList[key])}>
+                                        <li className={this.props.selectedReceiver._id === this.props.userList[key]._id ? "user-list-box selected-user": "user-list-box"} key={key} onClick={this.selectUserForChat.bind(this, this.props.userList[key])}>
                                             <img className="dp" src={this.props.userList[key].picture} alt=""/>
                                             <span>{this.props.userList[key].name}</span>
                                             <span className="user-status">{this.props.userList[key].status}</span>
@@ -143,7 +146,7 @@ class Chat extends React.Component {
                                         })} */}
                                     </div>
                                     <div className="msg-footer v-center">
-                                        <span className="msg-box"><TextField fullWidth id="msg"  label="Enter Your Message" margin="dense" onKeyDown={this.handleKeyPress.bind(this)} onChange={this.setInputValue.bind(this)} value={this.state.message ? this.state.message: ''}/> <br/></span>
+                                        <span className="msg-box"><TextField fullWidth id="msg" autoFocus="true" multiLine="true"  label="Enter Your Message" margin="dense" onKeyDown={this.handleKeyPress.bind(this)} onChange={this.setInputValue.bind(this)} value={this.state.message ? this.state.message: ''}/> <br/></span>
                                         <span className="send-btn"><Button variant="raised" color="primary" className="" onClick={this.sendMessage.bind(this)}>
                                             Send
                                         </Button></span>
@@ -162,6 +165,21 @@ class Chat extends React.Component {
         }
     }
 }
+
+Chat.propTypes = {
+    
+    loggedInUser: PropTypes.object.isRequired,
+    fetchUserLoading: PropTypes.bool.isRequired,
+    userList: PropTypes.object.isRequired,
+    isFbInitialized: PropTypes.bool.isRequired,
+    currentConversationRef: PropTypes.object.isRequired,
+    myConversations: PropTypes.object.isRequired,
+    messageLoading: PropTypes.bool.isRequired,
+    currentConversationMessages: PropTypes.object.isRequired,
+    dbRef: PropTypes.object.isRequired,
+    allConversationMessages: PropTypes.object.isRequired,
+    selectedReceiver: PropTypes.object.isRequired
+};
 
 function mapStateToProps(state) {
 
@@ -185,4 +203,5 @@ function mapDispatchToProps(dispatch) {
     let actions = bindActionCreators({ firebaseActions });
     return { ...actions, dispatch };
 }
+
 export default connect(mapStateToProps, mapDispatchToProps)(Chat);
