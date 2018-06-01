@@ -4,11 +4,14 @@ import {connect} from 'react-redux';
 import {bindActionCreators} from 'redux';
 import * as firebaseActions from '../../actions/firebase.js';
 import { withRouter } from 'react-router-dom';
+import moment from 'moment';
 
 //Material dependencies
 import {CircularProgress} from 'material-ui/Progress';
 import Button from 'material-ui/Button';
 import TextField from 'material-ui/TextField';
+import { withStyles } from 'material-ui/styles';
+import SendIcon from '@material-ui/icons/Send';
 
 //css 
 import './chat.css';
@@ -21,12 +24,15 @@ class Chat extends React.Component {
             message: ''
         }
     }
-    componentWillMount() {
-        console.log('proptypes', PropTypes);
+    componentWillMount() {        
+        //Set lang for date and time formated
+        moment.locale('en');
         if(this.props.isFbInitialized) {
             this.props.dispatch(firebaseActions.getUserList());
             this.props.dispatch(firebaseActions.conversationByUserId(this.props.loggedInUser._id));
             this.props.dispatch(firebaseActions.watchConversations(this.props.dbRef,this.props.loggedInUser._id));
+            let elem = document.getElementById('msg-text-box');
+            console.log('elem', elem);
         }
     }
     
@@ -89,6 +95,7 @@ class Chat extends React.Component {
     };
 
     render() {
+        const { classes } = this.props;
         if(this.props.fetchUserLoading) {
             return(
                 <div className="row App hv-center">
@@ -109,9 +116,16 @@ class Chat extends React.Component {
                                     {Object.keys(this.props.userList).map((key)=>{
                                       return(
                                         <li className={this.props.selectedReceiver._id === this.props.userList[key]._id ? "user-list-box selected-user": "user-list-box"} key={key} onClick={this.selectUserForChat.bind(this, this.props.userList[key])}>
-                                            <img className="dp" src={this.props.userList[key].picture} alt=""/>
-                                            <span>{this.props.userList[key].name}</span>
-                                            <span className="user-status">{this.props.userList[key].status}</span>
+                                            <div className="col-sm-2 no-padding">
+                                                <img className="dp" src={this.props.userList[key].picture} alt="N"/>
+                                            </div>
+                                            <div className="col-sm-8">
+                                                <div className="user-name">{this.props.userList[key].name}</div>
+                                                <span className={this.props.userList[key].status === 'Offline' ? "last-seen" : 'hidden'}>Last Seen {moment(this.props.userList[key].lastSeen).fromNow()}</span>
+                                            </div>
+                                            <div className="col-sm-2">
+                                                <span className="user-status">{this.props.userList[key].status}</span>
+                                            </div>
                                         </li>
                                     )  
                                     })}
@@ -127,7 +141,7 @@ class Chat extends React.Component {
                                                     <div className={this.props.loggedInUser._id === this.props.currentConversationMessages[key].from ? 'msg-detail msg-bg-right row no-margin': 'msg-detail msg-bg-left no-margin'} key={key}>
                                                         <div className="full-width pull-left">{this.props.currentConversationMessages[key].from === this.props.loggedInUser._id ? 'You': ''+this.props.selectedReceiver.name}</div>
                                                         <div className="full-width message-text">{this.props.currentConversationMessages[key].message}</div>
-                                                        <div className="full-width pull-right">{this.props.currentConversationMessages[key].timestamp}</div>
+                                                        <div className="full-width pull-right">{moment(this.props.currentConversationMessages[key].timestamp).fromNow()}</div>                                                        
                                                     </div>
                                                 )
                                             }
@@ -146,10 +160,16 @@ class Chat extends React.Component {
                                         })} */}
                                     </div>
                                     <div className="msg-footer v-center">
-                                        <span className="msg-box"><TextField fullWidth id="msg" autoFocus="true" multiLine="true"  label="Enter Your Message" margin="dense" onKeyDown={this.handleKeyPress.bind(this)} onChange={this.setInputValue.bind(this)} value={this.state.message ? this.state.message: ''}/> <br/></span>
-                                        <span className="send-btn"><Button variant="raised" color="primary" className="" onClick={this.sendMessage.bind(this)}>
+                                        {/* <span className="msg-box"> */}
+                                        <TextField fullWidth autoFocus id="msg-text-box" label="Enter Your Message" margin="dense" className={classes.textField} onKeyDown={this.handleKeyPress.bind(this)} onChange={this.setInputValue.bind(this)} value={this.state.message ? this.state.message: '' }/> <br/>
+
+                                        {/* </span> */}
+                                        {/* <span className="send-btn"><Button variant="raised" color="primary" className="" onClick={this.sendMessage.bind(this)}>
                                             Send
-                                        </Button></span>
+                                        </Button></span> */}
+                                        <Button className={classes.button} variant="raised" color="primary" onClick={this.sendMessage.bind(this)}>
+                                            <SendIcon className={classes.rightIcon}/>
+                                        </Button>
                                     </div>
                                 </div>
                                 <div className={this.props.messageLoading ? 'msg-loading-container visible': 'hidden'}>
@@ -166,19 +186,35 @@ class Chat extends React.Component {
     }
 }
 
+const styles = theme => ({
+    button: {
+        margin: theme.spacing.unit,
+        float: 'right',
+        borderRadius:'50px'
+    },
+    rightIcon: {
+        marginLeft: theme.spacing.unit,
+    },
+    textField: {
+      marginLeft: theme.spacing.unit,
+      marginRight: theme.spacing.unit
+    },
+  });
+
 Chat.propTypes = {
     
     loggedInUser: PropTypes.object.isRequired,
     fetchUserLoading: PropTypes.bool.isRequired,
     userList: PropTypes.object.isRequired,
     isFbInitialized: PropTypes.bool.isRequired,
-    currentConversationRef: PropTypes.object.isRequired,
+    currentConversationRef: PropTypes.object,
     myConversations: PropTypes.object.isRequired,
     messageLoading: PropTypes.bool.isRequired,
     currentConversationMessages: PropTypes.object.isRequired,
     dbRef: PropTypes.object.isRequired,
     allConversationMessages: PropTypes.object.isRequired,
-    selectedReceiver: PropTypes.object.isRequired
+    selectedReceiver: PropTypes.object.isRequired,
+    classes: PropTypes.object.isRequired
 };
 
 function mapStateToProps(state) {
@@ -204,4 +240,5 @@ function mapDispatchToProps(dispatch) {
     return { ...actions, dispatch };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Chat);
+// export default connect(mapStateToProps, mapDispatchToProps)(Chat);
+export default withStyles(styles)(connect(mapStateToProps, mapDispatchToProps)(Chat));

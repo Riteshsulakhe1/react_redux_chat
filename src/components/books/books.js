@@ -161,7 +161,7 @@ class Books extends React.Component {
                         <DialogContentText>
                             Here you can add or update your book
                         </DialogContentText>
-                        <TextField fullWidth id="book-name" style={styles.textField} label="Enter Book Name" margin="dense" onChange={this.setInputValue.bind(this, 'name')} value={this.state.bookDetail.name ? this.state.bookDetail.name: ''}/> <br/>
+                        <TextField fullWidth id="book-name" autoFocus style={styles.textField} label="Enter Book Name" margin="dense" onChange={this.setInputValue.bind(this, 'name')} value={this.state.bookDetail.name ? this.state.bookDetail.name: ''}/> <br/>
                         <TextField fullWidth id="book-description" style={styles.textField} multiline rows={2} margin="dense" rowsMax={4} label="Enter Book Description" onChange={this.setInputValue.bind(this, 'description')} value={this.state.bookDetail.description ? this.state.bookDetail.description: ''}/><br/>
                         <TextField fullWidth id="book-auther" style={styles.textField} label="Enter Book Auther" margin="dense" onChange={this.setInputValue.bind(this, 'auther')} value={this.state.bookDetail.auther ? this.state.bookDetail.auther: ''}/>
                     </DialogContent>

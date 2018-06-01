@@ -54,11 +54,6 @@ export function firebaseReducer(state = initialState, action) {
             state = Object.assign({}, state, action.payload);
             break;
         }
-        case fbConstants.CLEAR_CONV:
-        {
-            state = Object.assign({}, state, action.payload);
-            break;
-        }
         case fbConstants.SAVE_MY_CONVERSATION_LIST:
         {
             
@@ -80,16 +75,6 @@ export function firebaseReducer(state = initialState, action) {
             } 
             break;
         }
-        // case fbConstants.STORE_UPDATED_MSG:
-        // {
-        //     if(action.payload.newMsgKey) {
-        //         let convObj = state.currentConversationMessages;
-        //         convObj[action.payload.newMsgKey] = action.payload.message;
-        //         let modifiedObj = {currentConversationMessages: convObj}
-        //         state = Object.assign({}, state, modifiedObj);
-        //     }
-        //     break;
-        // }
         case fbConstants.MSG_LOADING:
         {
             

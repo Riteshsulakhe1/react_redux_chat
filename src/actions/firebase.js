@@ -133,7 +133,6 @@ export function Authenticate(){
 export function logOut(user) {
 
     updateUserStatusOffline(user);
-    updateLastSeen(user);
     return firebase.auth().signOut()
 }
 
@@ -157,23 +156,15 @@ function updateUserStatusOffline (user){
 
     if(user){
         var usersRef = database.ref('Users/'+user._id);
+        var date = new Date();
+        var timestamp = date.getTime();
         usersRef.update({
-        status: 'Offline'
-        })
+            status: 'Offline',
+            lastSeen: timestamp
+        });
     }
 }
 
-function updateLastSeen(user) {
-    
-    if(user) {
-        var date = new Date();
-        var timestamp = date.getTime();
-        var usersRef = database.ref('Users/'+user._id);
-        usersRef.update({
-        lastSeen: timestamp
-        })
-    }
-}
 export function selectReceiver(user) {
 
     if(user && user._id) {
@@ -205,22 +196,7 @@ function updateUserList (users) {
 
 ///////////////Messages actions///////////////////
 
-export function conversationByUserId (userId) {
-
-    return dispatchEvent=>{
-        conversationNodeRef = database.ref('Conversations/'+userId);
-        conversationNodeRef.once('value').then(convList=>{
-            if (convList.val() && convList.exists()) { 
-                dispatchEvent(saveConversationList(convList.val()));
-                dispatchEvent(getAllMessages(Object.keys(convList.val())));
-            } else {
-                dispatchEvent(saveConversationList({}));
-            }
-            
-        });
-    }
-}
-
+//Check whether the conversation exist or not using the conversationID
 export function checkConversation (dispatch,loggedInUserId,nextUserId) {
 
     if(dispatch,loggedInUserId, nextUserId) {
@@ -246,6 +222,7 @@ export function checkConversation (dispatch,loggedInUserId,nextUserId) {
     }
 };
 
+//Create new conversation for both users
 export function createNewConversation (loggedInUserId, nextUserId) {
 
     return dispatch=> {
@@ -283,6 +260,24 @@ export function createNewConversation (loggedInUserId, nextUserId) {
     }  
 }
 
+//Get conversation by conversationID
+export function conversationByUserId (userId) {
+
+    return dispatchEvent=>{
+        conversationNodeRef = database.ref('Conversations/'+userId);
+        conversationNodeRef.once('value').then(convList=>{
+            if (convList.val() && convList.exists()) { 
+                dispatchEvent(saveConversationList(convList.val()));
+                dispatchEvent(getAllMessages(Object.keys(convList.val())));
+            } else {
+                dispatchEvent(saveConversationList({}));
+            }
+            
+        });
+    }
+}
+
+//Create Message node for user using conversationID
 export function createMessageNodeByConvId (conv) {
     return dispatch=> {
         let msgNodeRef = database.ref('Chats/'+conv.conversationId);
@@ -299,21 +294,7 @@ export function createMessageNodeByConvId (conv) {
     }
 }
 
-export function getMessagesByConvId(conv) {
-
-    return dispatch => {
-        let messageNodeRef = database.ref('Chats/'+conv.conversationId);
-        messageNodeRef.once('value').then(messages=>{
-            if(messages.exists()){
-                dispatch(saveCurrentConvMsg(messages.val()));
-            } else {
-                createMessageNodeByConvId(conv);
-            }
-            dispatch(toggleMessageLoading(false));
-        });
-    }
-}
-
+//Get all msg from firebase
 export function getAllMessages (convresationIdArray) {
 
     return dispatch=>{
@@ -335,6 +316,23 @@ export function getAllMessages (convresationIdArray) {
     }
 }
 
+//Get messages using the conversationID
+export function getMessagesByConvId(conv) {
+
+    return dispatch => {
+        let messageNodeRef = database.ref('Chats/'+conv.conversationId);
+        messageNodeRef.once('value').then(messages=>{
+            if(messages.exists()){
+                dispatch(saveCurrentConvMsg(messages.val()));
+            } else {
+                createMessageNodeByConvId(conv);
+            }
+            dispatch(toggleMessageLoading(false));
+        });
+    }
+}
+
+//Save message into firebase
 export function sendMessage (msgObj) {
 
     return (dispatch,getState) => {
@@ -342,13 +340,14 @@ export function sendMessage (msgObj) {
         msgNodeRef.push(msgObj).then(msg=>{
             msgNodeRef.once('value').then(msgs=>{
                 dispatch(saveCurrentConvMsg(msgs.val()));
-                upadateCurrentConv(msgObj);
                 console.log('_______msg sent successfully_______');
+                upadateCurrentConv(msgObj);
             });
         });
     }
 }
 
+//Update converation lastMessage
 export function upadateCurrentConv(msgObj) {
 
     let senderConvRef = database.ref('Conversations/'+msgObj.from+'/'+msgObj.conversationId);
@@ -367,6 +366,7 @@ export function upadateCurrentConv(msgObj) {
     });
 }
 
+//Watch conversation node in firebase
 export function watchConversations(dbRef, userId) {
     
     return (dispatch, getState)=>{
@@ -376,7 +376,6 @@ export function watchConversations(dbRef, userId) {
         });
         convRef.on('child_added', (addedConv)=>{
             let myConversations = getState().firebaseStates.myConversations;
-            // console.log('my conv', myConversations);
             if(Object.keys(myConversations).length && !myConversations[addedConv.key]) {
                 console.log('new conv added to my id', addedConv.val(), addedConv.key);
             }
@@ -384,35 +383,25 @@ export function watchConversations(dbRef, userId) {
     }
 }
 
-// export function watchCurrentConversationChat(convObj) {
-//     console.log('watching chat...........', convObj.conversationId);
-//     return dispatch=>{
-//         let chatRef = database.ref('Chats/'+convObj.conversationId);
-//         console.log('changed chat node ref ', chatRef);
-//         chatRef.on('child_added', function(data) {
-//             console.log('chats child changed ...', data.val(),data.key);
-//             // dispatch(saveCurrentConvMsg(data.val(), data.key));
-//         });
-//     }
-// }
-
+//Get Newly arrieved message
 export function getNewMessageByConvId (conversationObj) {
-    
+
+    console.log('------------ new msg received --------------');
     return (dispatch, getState)=>{
         let chatRef = database.ref('Chats/'+conversationObj.conversationId);
         chatRef.once('value').then(snapshot=>{
             let allMsgs = snapshot.val();
             let allMsgsKey = Object.keys(allMsgs);
-            let newMsgKey = allMsgsKey[allMsgsKey.length-1];
-            let newMsgObj = allMsgs[newMsgKey];
             let state = getState().firebaseStates;
             let allConvObj = state.allConversationMessages;
-            allConvObj[conversationObj.conversationId][newMsgKey] = newMsgObj;
+            allConvObj[conversationObj.conversationId] = {};
+            allConvObj[conversationObj.conversationId] = allMsgs;
             dispatch(storeAllMessages(allConvObj[conversationObj.conversationId], conversationObj.conversationId));
-            if(state.currentConversationRef.conversationId === conversationObj.conversationId && !state.currentConversationMessages[newMsgKey]) {
-                console.log('.............. new msg key does not exist ..........', newMsgKey);
+            if(state.currentConversationRef.conversationId === conversationObj.conversationId) {
+                dispatch(saveCurrentConvMsg({}));
                 dispatch(saveCurrentConvMsg(allConvObj[conversationObj.conversationId]));
             }
+
         })
     }
 }
@@ -452,15 +441,11 @@ export function storeAllMessages(data, conversationId) {
     }
 }
 
-export function saveCurrentConvMsg(messages, msgId) {
+export function saveCurrentConvMsg(messages) {
 
     return dispatch=>{
+        dispatch({type: fbConstants.STORE_CONV_MSGS, payload: {currentConversationMessages: messages}});
         scrollToBottomOfDiv();
-        if(msgId) {
-            dispatch({type: fbConstants.STORE_CONV_MSGS, payload: {currentConversationMessages: messages, newMsgKey: msgId}});
-        } else {
-            dispatch({type: fbConstants.STORE_CONV_MSGS, payload: {currentConversationMessages: messages}});
-        }
     }
 
 }
